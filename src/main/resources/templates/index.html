@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html th:lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Round Robin Algorithm</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.css" type="text/css"
+        th:href="@{/css/bootstrap.css}">
+    <script src="/static/js/bootstrap.js" th:src="@{/js/bootstrap.js}">
+        console.log("funciona")
+    </script>
+</head>
+<body>
+
+<form th:action="@{'/index/process'}" method="post" th:object="${process}">
+    <label th:for="idProcess">ID</label>
+    <input th:field="*{idProcess}" type="number" placeholder="Ingresa ID" required="required">
+    <br>
+    <label th:for="nameProcess">Nombre del proceso</label>
+    <input th:field="*{nameProcess}" type="text" placeholder="Ingresa el nombre del proceso" required="required">
+    <br>
+    <label th:for="rafagaCPU">Rafaga de CPU</label>
+    <input th:field="*{rafagaCPU}" type="number" placeholder="Ingresa la rafaga de CPU" required="required">
+    <br>
+    <button class="btn btn-primary" type="submit">Agregar Proceso</button>
+</form>
+
+<div th:if="${listProcess}">
+    <table class="table table-hover table-dark">
+        <thead>
+        <th scope="col">ID</th>
+        <th scope="col">Proceso</th>
+        <th scope="col">Rafaga CPU</th>
+        <th scope="col">Opciones</th>
+        </thead>
+        <tbody>
+        <tr th:each="myProcess : ${listProcess}">
+            <th scope="row" th:text="${myProcess.idProcess}"></th>
+            <td th:text="${myProcess.nameProcess}"></td>
+            <td th:text="${myProcess.rafagaCPU}"></td>
+            <td>
+                <a th:href="@{'/remove/process/'+${myProcess.idProcess}}" class="btn btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<form th:action="@{'/execute/algorithm'}" method="post" th:object="${quantum}">
+    <label th:for="numebrQuantum">Quantum</label>
+    <input th:field="*{numberQuantum}" type="number" placeholder="Ingrese el quantum" required="required">
+    <button class="btn btn-primary" type="submit">Ejecutar Algoritmo</button>
+</form>
+
+</body>
+</html>

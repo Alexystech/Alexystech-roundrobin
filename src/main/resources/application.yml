@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: roundrobin
+  thymeleaf:
+    mode: HTML
+    cache: false
+    encoding: UTF-8
+server:
+  port: 8080
