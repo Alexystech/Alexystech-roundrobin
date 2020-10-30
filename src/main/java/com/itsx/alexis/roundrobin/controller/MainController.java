@@ -9,20 +9,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Controller
 public class MainController {
 
     private ExecutorService executorService;
     private StringBuffer builder = new StringBuffer();
-    private List<CustomProcess>listProcess = new LinkedList<>();
+    private List<CustomProcess>listProcess = Collections.synchronizedList(new LinkedList<>());
     private int contadorIndice = 1;
     private Quantum quantum;
 
@@ -39,15 +36,6 @@ public class MainController {
         model.addAttribute("listProcess",listProcess);
         model.addAttribute("quantum",new Quantum());
 
-        /*List<CompletableFuture<String>> allFutureString =
-                IntStream.range(0,10)
-                .mapToObj(String::valueOf)
-                .sequential()
-                .map(this::produceFutureString)
-                .map((future) -> future.whenComplete((value,throwable)-> builder.append(value)))
-                .collect(Collectors.toList());
-        allFutureString.forEach((future) -> System.out.println(future.join()));
-        model.addAttribute("greetings",builder.toString());*/
         return "index";
     }
 
@@ -65,20 +53,25 @@ public class MainController {
 
     @GetMapping("/remove/process/{indice}")
     public String removeProcess(@PathVariable int id, Model model) {
-
-        if (redundantId(id)) {
-
-        } else {
-
-        }
         return "redirect:/index";
     }
 
     @PostMapping("/execute/algorithm")
     public String executeAlgorithm(Quantum quantum,Model model) {
-        System.out.println(quantum.getNumberQuantum());
         this.quantum = quantum;
+
+        CustomThread customThread = new CustomThread(listProcess,quantum);
+        customThread.run();
+
         return "redirect:/index";
+    }
+
+    private int getUnidadesProceso(List<CustomProcess>listProcess) {
+        int acomulador = 0;
+        for (CustomProcess process : listProcess) {
+            acomulador += process.getRafagaCPU();
+        }
+        return acomulador;
     }
 
     private boolean redundantId(int id) {
@@ -95,7 +88,76 @@ public class MainController {
         
     }
 
-    /*private CompletableFuture<String> produceFutureString(String value) {
-        return CompletableFuture.supplyAsync(() -> String.format("%s - %s\n", value,"hello"));
-    }*/
+    private class CustomThread implements Runnable{
+        List<CustomProcess>listProcess;
+        Quantum quantum;
+        Thread thread;
+
+        public CustomThread(List<CustomProcess>listProcess,Quantum quantum) {
+            this.listProcess = listProcess;
+            this.quantum = quantum;
+            thread = new Thread("hilo -");
+            thread.start();
+        }
+
+        @Override
+        public void run() {
+            int index=0;
+            int preRafaga=0;
+            boolean band = true;
+            List<CustomProcess>copy = listProcess;
+
+            synchronized (listProcess) {
+                while (band) {
+                    for (CustomProcess process: listProcess) {
+                        if ( process.getRafagaCPU() <= 0) {
+
+                        } else if ( process.getRafagaCPU() <= quantum.getNumberQuantum() ) {
+                            System.out.println(listProcess.get(index).getNameProcess()+"->"+listProcess.get(index).getRafagaCPU());
+                            preRafaga=process.getRafagaCPU();
+                            process.setRafagaCPU(0);
+                            listProcess.set(index,process);
+
+                            try {
+                                Thread.sleep(preRafaga*1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println(listProcess.get(index).getNameProcess()+"->"+listProcess.get(index).getRafagaCPU());
+
+                        } else {
+                            System.out.println(listProcess.get(index).getNameProcess()+"->"+listProcess.get(index).getRafagaCPU());
+                            process.setRafagaCPU(process.getRafagaCPU()-quantum.getNumberQuantum());
+                            listProcess.set(index,process);
+
+                            try {
+                                Thread.sleep(quantum.getNumberQuantum()*1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println(listProcess.get(index).getNameProcess()+"->"+listProcess.get(index).getRafagaCPU());
+
+                        }
+                        index++;
+                    }
+
+                    if (isAllZero(listProcess)) {
+                        band=false;
+                    }
+                    index = 0;
+                }
+            }
+        }
+
+        private boolean isAllZero(List<CustomProcess>listProcess) {
+            boolean ban = true;
+            for (CustomProcess process : listProcess) {
+                if (process.getRafagaCPU()!=0) {
+                    ban = false;
+                    break;
+                }
+            }
+            return ban;
+        }
+    }
 }
