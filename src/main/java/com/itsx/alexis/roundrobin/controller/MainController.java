@@ -21,6 +21,8 @@ public class MainController {
     private StringBuffer builder = new StringBuffer();
     private List<CustomProcess>listProcess = Collections.synchronizedList(new LinkedList<>());
     private int contadorIndice = 1;
+    private int unidadesTiempo = 0;
+    private int cambioContexto = 0;
     private Quantum quantum;
 
     @Autowired
@@ -35,38 +37,52 @@ public class MainController {
         model.addAttribute("id",contadorIndice);
         model.addAttribute("listProcess",listProcess);
         model.addAttribute("quantum",new Quantum());
+        model.addAttribute("unidadesTiempo",unidadesTiempo);
+        model.addAttribute("cambioContexto",cambioContexto);
 
         return "index";
     }
 
     @PostMapping("/index/process")
     public String addProcess(CustomProcess process,Model model) {
-        contadorIndice++;
-        listProcess.add(process);
+
+        if (!redundantId(process.getIdProcess())) {
+            contadorIndice++;
+            listProcess.add(process);
+        } else {
+            model.addAttribute("toast");
+        }
+
         model.addAttribute("listProcess",listProcess);
         model.addAttribute("process",new CustomProcess());
         model.addAttribute("newProcess",process);
         model.addAttribute("id",contadorIndice);
         model.addAttribute("quantum",new Quantum());
+        model.addAttribute("unidadesTiempo",unidadesTiempo);
+        model.addAttribute("cambioContexto",cambioContexto);
         return "index";
     }
 
-    @GetMapping("/remove/process/{indice}")
+    @GetMapping("/remove/process/{id}")
     public String removeProcess(@PathVariable int id, Model model) {
+        remove(id);
         return "redirect:/index";
     }
 
     @PostMapping("/execute/algorithm")
     public String executeAlgorithm(Quantum quantum,Model model) {
-        this.quantum = quantum;
+        model.addAttribute("cambioContexto",cambioContexto);
 
+        this.quantum = quantum;
+        this.unidadesTiempo = getUnidadesTiempo(listProcess);
         CustomThread customThread = new CustomThread(listProcess,quantum);
         customThread.run();
+        this.cambioContexto = customThread.getCambioContexto();
 
         return "redirect:/index";
     }
 
-    private int getUnidadesProceso(List<CustomProcess>listProcess) {
+    private int getUnidadesTiempo(List<CustomProcess>listProcess) {
         int acomulador = 0;
         for (CustomProcess process : listProcess) {
             acomulador += process.getRafagaCPU();
@@ -84,14 +100,22 @@ public class MainController {
         return redundant;
     }
 
-    private void dropProcess(int id) {
-        
+    private void remove(int id) {
+        int index=0;
+        for (CustomProcess process : listProcess) {
+            if (id == process.getIdProcess()) {
+                listProcess.remove(index);
+                break;
+            }
+            index++;
+        }
     }
 
     private class CustomThread implements Runnable{
-        List<CustomProcess>listProcess;
-        Quantum quantum;
-        Thread thread;
+        private List<CustomProcess>listProcess;
+        private Quantum quantum;
+        private Thread thread;
+        private int cambioContexto = 0;
 
         public CustomThread(List<CustomProcess>listProcess,Quantum quantum) {
             this.listProcess = listProcess;
@@ -105,7 +129,6 @@ public class MainController {
             int index=0;
             int preRafaga=0;
             boolean band = true;
-            List<CustomProcess>copy = listProcess;
 
             synchronized (listProcess) {
                 while (band) {
@@ -123,6 +146,7 @@ public class MainController {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+                            cambioContexto++;
                             System.out.println(listProcess.get(index).getNameProcess()+"->"+listProcess.get(index).getRafagaCPU());
 
                         } else {
@@ -135,6 +159,7 @@ public class MainController {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+                            cambioContexto++;
                             System.out.println(listProcess.get(index).getNameProcess()+"->"+listProcess.get(index).getRafagaCPU());
 
                         }
@@ -142,11 +167,16 @@ public class MainController {
                     }
 
                     if (isAllZero(listProcess)) {
+                        System.out.println(cambioContexto);
                         band=false;
                     }
                     index = 0;
                 }
             }
+        }
+
+        public int getCambioContexto() {
+            return this.cambioContexto;
         }
 
         private boolean isAllZero(List<CustomProcess>listProcess) {

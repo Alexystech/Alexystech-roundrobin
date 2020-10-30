@@ -5,9 +5,8 @@
     <title>Round Robin Algorithm</title>
     <link rel="stylesheet" href="/static/css/bootstrap.css" type="text/css"
         th:href="@{/css/bootstrap.css}">
-    <script src="/static/js/bootstrap.js" th:src="@{/js/bootstrap.js}">
-        console.log("funciona")
-    </script>
+    <link rel="script" href="/static/js/bootstrap.js"
+          th:href="@{/js/bootstrap.js}">
 </head>
 <body>
 
@@ -50,6 +49,21 @@
     <input th:field="*{numberQuantum}" type="number" placeholder="Ingrese el quantum" required="required">
     <button class="btn btn-primary" type="submit">Ejecutar Algoritmo</button>
 </form>
+
+<table class="table">
+    <thead class="thead-dark">
+    <tr>
+        <th scope="col">Total de Unidades de Tiempo</th>
+        <th scope="col">Cambios de contexto</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td th:text="${unidadesTiempo}"></td>
+        <td th:text="${cambioContexto}"></td>
+    </tr>
+    </tbody>
+</table>
 
 </body>
 </html>
