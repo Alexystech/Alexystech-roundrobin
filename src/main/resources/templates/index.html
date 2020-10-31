@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Round Robin Algorithm</title>
+
+    <!-- Se cargar el bootstrap. -->
     <link rel="stylesheet" href="/static/css/bootstrap.css" type="text/css"
         th:href="@{/css/bootstrap.css}">
     <link rel="script" href="/static/js/bootstrap.js"
@@ -10,6 +12,7 @@
 </head>
 <body>
 
+<!-- Formulario para registrar un nuevo proceso. -->
 <form th:action="@{'/index/process'}" method="post" th:object="${process}">
     <label th:for="idProcess">ID</label>
     <input th:field="*{idProcess}" type="number" placeholder="Ingresa ID" required="required">
@@ -23,6 +26,7 @@
     <button class="btn btn-primary" type="submit">Agregar Proceso</button>
 </form>
 
+<!-- Tabla donde se muestran los procesos. -->
 <div th:if="${listProcess}">
     <table class="table table-hover table-dark">
         <thead>
@@ -44,12 +48,15 @@
     </table>
 </div>
 
+<!-- Pequeño formulario donde se registra el Quantum -->
 <form th:action="@{'/execute/algorithm'}" method="post" th:object="${quantum}">
     <label th:for="numebrQuantum">Quantum</label>
     <input th:field="*{numberQuantum}" type="number" placeholder="Ingrese el quantum" required="required">
     <button class="btn btn-primary" type="submit">Ejecutar Algoritmo</button>
 </form>
 
+<!-- En esta tabla se muestran los resultados obtenidos despues de ejecutar el algoritmo
+ Round Robin-->
 <table class="table">
     <thead class="thead-dark">
     <tr>
